@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NCS2K Chatbot Page</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+
+    .header {
+        background-color: #036335;
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .header .nav-links {
+        display: flex;
+        gap: 15px;
+    }
+
+    .header .nav-links a {
+        color: white;
+        text-decoration: none;
+        font-size: 16px;
+    }
+
+    .header .nav-links a:hover {
+        text-decoration: underline;
+    }
+
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        background-color: white;
+        margin: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-header {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .chat-window {
+        flex: 1;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        overflow-y: auto;
+        background-color: #f9f9f9;
+    }
+
+    .chat-input {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+
+    .chat-input button {
+        padding: 10px 20px;
+        background-color: #3d5237;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .chat-input button:hover {
+        background-color: #4b6443;
+    }
+</style>
+</head>
+<body>
+    <div class="header">
+        <span>NCS2K BEMS CHATBOT</span>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Feedback</a>
+            <a href="#">Summary</a>
+        </div>
+    </div>
+    <div class="chat-container">
+        <div class="chat-header">Welcome to BEMS AI Chatbot</div>
+        <div class="chat-window" id="chat-window">
+            <!-- Chat messages will appear here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        
+    </div>
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const chatWindow = document.getElementById('chat-window');
+    
+            if (input.value.trim() !== "") {
+                // Display the user's message
+                const userMessage = document.createElement('div');
+                userMessage.textContent = `You: ${input.value}`;
+                userMessage.style.margin = "10px 0";
+                chatWindow.appendChild(userMessage);
+    
+                // Send message to the Django backend
+                try {
+                    const response = await fetch('/get_response/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: input.value }),
+                    });
+    
+                    if (!response.ok) throw new Error("Failed to fetch response");
+    
+                    const data = await response.json();
+    
+                    // Create a container for the AI response
+                    const aiResponseContainer = document.createElement('div');
+                    aiResponseContainer.style.margin = "20px 0";
+                    aiResponseContainer.style.display = "flex";
+                    aiResponseContainer.style.gap = "20px";
+    
+
+                    const parentBoxStyle = `
+                        padding: 20px;
+                        border: 1px solid #ddd;
+                        border-radius: 10px;
+                        background-color:rgb(176, 210, 191); /* Light blue */
+                        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                        margin: 20px 0;
+                        `;
+                        // Define styles for the child boxes container
+                        const childContainerStyle = `
+                        display: flex;
+                        flex-wrap: wrap; /* Allow wrapping for 2x2 layout */
+                        gap: 20px; /* Space between boxes */
+                        `;
+
+                        // Define styles for individual child boxes
+                        const boxStyle = `
+                        flex: 1 1 calc(50% - 20px); /* Each box takes 50% width minus the gap */
+                        box-sizing: border-box;
+                        padding: 15px;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        background-color: #ffffff;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                        `;
+
+                        // Create the parent box container
+                        const parentBox = document.createElement('div');
+                        parentBox.style = parentBoxStyle;
+
+                        // Add heading inside the parent box
+                        const parentHeading = document.createElement('h3');
+                        parentHeading.textContent = "Summary of Similar Known Issues";
+                        parentHeading.style.marginBottom = "20px";
+                        parentBox.appendChild(parentHeading);
+
+                        // Create the child container to hold child boxes
+                        const childContainer = document.createElement('div');
+                        childContainer.style = childContainerStyle;
+
+                        // Create individual child boxes with headings
+                        const problemStatementBox = document.createElement('div');
+                        problemStatementBox.style = boxStyle;
+                        problemStatementBox.innerHTML = `
+                        <h4 style="margin-bottom: 10px;">Problem Statement</h4>
+                        <p>${data.problem_statement}</p>
+                        `;
+
+
+                        const categorizationBox = document.createElement('div');
+                        categorizationBox.style = boxStyle;
+                        categorizationBox.innerHTML = `
+                        <h4 style="margin-bottom: 10px;">Root Cause Categorization</h4>
+                        <ul>
+                            ${data.root_cause_categorization.map(cause => `<li>${cause}</li>`).join('')}
+                        </ul>
+                        `;
+                        
+
+                        const resolutionSummaryBox = document.createElement('div');
+                        resolutionSummaryBox.style = boxStyle;
+                        resolutionSummaryBox.innerHTML = `
+                        <h4 style="margin-bottom: 10px;">Problem Statement</h4>
+                        <p>${data.resolution_summary}</p>
+                        `;
+
+                        const nextStepsBox = document.createElement('div');
+                        nextStepsBox.style = boxStyle;
+                        nextStepsBox.innerHTML = `
+                        <h4 style="margin-bottom: 10px;">Suggested Next Steps</h4>
+                        <p>${data.suggested_next_steps}</p>
+                        `;
+
+                        // Append child boxes to the child container
+                        childContainer.appendChild(problemStatementBox);
+                        childContainer.appendChild(categorizationBox);
+                        childContainer.appendChild(resolutionSummaryBox);
+                        childContainer.appendChild(nextStepsBox);
+
+                        // Append the child container to the parent box
+                        parentBox.appendChild(childContainer);
+
+                        // Append the parent box to the chat window
+                        chatWindow.appendChild(parentBox);
+
+                        // **New Parent Box with Two Containers**
+                        const newParentBox = document.createElement('div');
+                        newParentBox.style = parentBoxStyle
+
+                        const newParentHeading = document.createElement('h3');
+                        newParentHeading.textContent = "Similar BEMS and TechZONE tickets"
+                        newParentBox.appendChild(newParentHeading)
+
+                        // New Child Containers
+                        const firstNewBox  = document.createElement('div');
+                        firstNewBox.style = boxStyle;
+                        firstNewBox.innerHTML = `<h4 style="margin-bottom: 10px;">Similar BEMS</h4>
+                        <p>${data.bems_value || "No Data Available."}</p>
+                        `;
+
+
+                        const secondNewBox  = document.createElement('div');
+                        secondNewBox.style = boxStyle;
+                        secondNewBox.innerHTML = `<h4 style="margin-bottom: 10px;">Similar Tech Zone</h4>
+                        <p>${data.techZone_value || "No Data Available."}</p>
+                        `;
+
+                        const newChildContainer =  document.createElement('div');
+                        newChildContainer.style = childContainerStyle
+
+                        newChildContainer.appendChild(firstNewBox);
+                        newChildContainer.appendChild(secondNewBox);
+
+                        newParentBox.appendChild(newChildContainer);
+                        chatWindow.appendChild(newParentBox);
+
+                } catch (error) {
+                    console.error("Error fetching AI response:", error);
+                    const errorMessage = document.createElement('div');
+                    errorMessage.textContent = "AI: Oops, something went wrong!";
+                    errorMessage.style.margin = "10px 0";
+                    errorMessage.style.color = "red";
+                    chatWindow.appendChild(errorMessage);
+                }
+    
+                input.value = "";
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
