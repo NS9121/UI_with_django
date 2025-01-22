@@ -97,9 +97,9 @@
     <div class="header">
         <span>NCS2K BEMS CHATBOT</span>
         <div class="nav-links">
-            <a href="#">Home</a>
-            <a href="#">Feedback</a>
-            <a href="#">Summary</a>
+            <a href="#" aria-label="Home">Home</a>
+            <a href="#" aria-label="Feedback">Feedback</a>
+            <a href="#" aria-label="Summary">Summary</a>
         </div>
     </div>
     <div class="chat-container">
@@ -108,8 +108,8 @@
             <!-- Chat messages will appear here -->
         </div>
         <div class="chat-input">
-            <input type="text" id="user-input" placeholder="Type your message...">
-            <button onclick="sendMessage()">Send</button>
+            <input type="text" id="user-input" placeholder="Type your message..."aria-label="Chat input field">
+            <button onclick="sendMessage()"aria-label="Send message">Send</button>
         </div>
         
     </div>
@@ -187,14 +187,13 @@
                         childContainer.style = childContainerStyle;
 
                         // Create individual child boxes with headings
-                        const problemStatementBox = document.createElement('div');
-                        problemStatementBox.style = boxStyle;
-                        problemStatementBox.innerHTML = `
+                        const responseBox = document.createElement('div');
+                        responseBox.style = boxStyle;
+                        responseBox.innerHTML = `
                         <h4 style="margin-bottom: 10px;">Problem Statement</h4>
-                        <p>${data.problem_statement}</p>
+                        <p>${data.response}</p>
                         `;
-
-
+                        
                         const categorizationBox = document.createElement('div');
                         categorizationBox.style = boxStyle;
                         categorizationBox.innerHTML = `
@@ -202,28 +201,31 @@
                         <ul>
                             ${data.root_cause_categorization.map(cause => `<li>${cause}</li>`).join('')}
                         </ul>
+                        
                         `;
                         
-
-                        const resolutionSummaryBox = document.createElement('div');
-                        resolutionSummaryBox.style = boxStyle;
-                        resolutionSummaryBox.innerHTML = `
-                        <h4 style="margin-bottom: 10px;">Problem Statement</h4>
-                        <p>${data.resolution_summary}</p>
+                        const problemStatementBox = document.createElement('div');
+                        problemStatementBox.style = boxStyle;
+                        problemStatementBox.innerHTML = `
+                        <h4 style="margin-bottom: 10px;">Resolution Summary</h4>
+                        <p>${data.problem_statement}</p>
                         `;
 
                         const nextStepsBox = document.createElement('div');
                         nextStepsBox.style = boxStyle;
                         nextStepsBox.innerHTML = `
                         <h4 style="margin-bottom: 10px;">Suggested Next Steps</h4>
-                        <p>${data.suggested_next_steps}</p>
+                        <p>${data.resolution_summary}</p>
                         `;
 
+                        
+
                         // Append child boxes to the child container
+                        childContainer.appendChild(responseBox);
                         childContainer.appendChild(problemStatementBox);
                         childContainer.appendChild(categorizationBox);
-                        childContainer.appendChild(resolutionSummaryBox);
                         childContainer.appendChild(nextStepsBox);
+
 
                         // Append the child container to the parent box
                         parentBox.appendChild(childContainer);
@@ -233,28 +235,82 @@
 
                         // **New Parent Box with Two Containers**
                         const newParentBox = document.createElement('div');
-                        newParentBox.style = parentBoxStyle
+                        newParentBox.style = parentBoxStyle;
 
                         const newParentHeading = document.createElement('h3');
-                        newParentHeading.textContent = "Similar BEMS and TechZONE tickets"
-                        newParentBox.appendChild(newParentHeading)
+                        newParentHeading.textContent = "Similar Issues for Reference";
+                        newParentBox.appendChild(newParentHeading);
 
                         // New Child Containers
-                        const firstNewBox  = document.createElement('div');
+                        const firstNewBox = document.createElement('div');
                         firstNewBox.style = boxStyle;
-                        firstNewBox.innerHTML = `<h4 style="margin-bottom: 10px;">Similar BEMS</h4>
-                        <p>${data.bems_value || "No Data Available."}</p>
+                        // Create tabs container
+                        const tabsContainer = document.createElement('div');
+                        tabsContainer.style = `
+                            display: flex;
+                            border-bottom: 2px solid #ddd;
+                            cursor: pointer;
+                            margin-bottom: 15px;
                         `;
 
+                        // Create content container for tab panels
+                        const contentContainer = document.createElement('div');
 
-                        const secondNewBox  = document.createElement('div');
+                        // Build tabs and content dynamically
+                        data.message.forEach((dict, index) => {
+                            // Create a tab button
+                            const tabButton = document.createElement('button');
+                            tabButton.textContent = `${index + 1}`;
+                            tabButton.style = `
+                                padding: 10px;
+                                border: none;
+                                background: ${index === 0 ? '#ddd' : 'transparent'};
+                                flex: 1;
+                            `;
+                            tabButton.dataset.index = index; // Store index for switching content
+                            tabsContainer.appendChild(tabButton);
+
+                            // Create content for the dictionary
+                            const dictItems = Object.entries(dict)
+                                .map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`)
+                                .join('');
+
+                            const contentDiv = document.createElement('div');
+                            contentDiv.innerHTML = `<ul>${dictItems}</ul>`;
+                            contentDiv.style = `
+                                display: ${index === 0 ? 'block' : 'none'}; /* Show the first tab content */
+                            `;
+                            contentDiv.dataset.index = index;
+                            contentContainer.appendChild(contentDiv);
+                        });
+
+                        // Add event listener for tab switching
+                        tabsContainer.addEventListener('click', (e) => {
+                            if (e.target.tagName === 'BUTTON') {
+                                const index = e.target.dataset.index;
+
+                                // Update tab styles
+                                Array.from(tabsContainer.children).forEach((tab, i) => {
+                                    tab.style.background = i == index ? '#ddd' : 'transparent';
+                                });
+
+                                // Show the selected content
+                                Array.from(contentContainer.children).forEach((content, i) => {
+                                    content.style.display = i == index ? 'block' : 'none';
+                                });
+                            }
+                        });
+
+                        //firstNewBox.innerHTML = `<h4>Similar BEMS</h4><p>${data.analysis || "No Data Available."}</p>`;
+                        // Append tabs and content to the box
+                        firstNewBox.appendChild(tabsContainer);
+                        firstNewBox.appendChild(contentContainer);
+                        const secondNewBox = document.createElement('div');
                         secondNewBox.style = boxStyle;
-                        secondNewBox.innerHTML = `<h4 style="margin-bottom: 10px;">Similar Tech Zone</h4>
-                        <p>${data.techZone_value || "No Data Available."}</p>
-                        `;
+                        secondNewBox.innerHTML = `<h4>Related TechZone</h4><p>${data.references || "No Data Available."}</p>`;
 
-                        const newChildContainer =  document.createElement('div');
-                        newChildContainer.style = childContainerStyle
+                        const newChildContainer = document.createElement('div');
+                        newChildContainer.style = childContainerStyle;
 
                         newChildContainer.appendChild(firstNewBox);
                         newChildContainer.appendChild(secondNewBox);
@@ -265,7 +321,7 @@
                 } catch (error) {
                     console.error("Error fetching AI response:", error);
                     const errorMessage = document.createElement('div');
-                    errorMessage.textContent = "AI: Oops, something went wrong!";
+                    errorMessage.textContent = "BEMS AI: Oops, something went wrong!";
                     errorMessage.style.margin = "10px 0";
                     errorMessage.style.color = "red";
                     chatWindow.appendChild(errorMessage);
