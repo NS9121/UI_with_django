@@ -32,6 +32,8 @@ def get_response(request):
             response_data = {"response" : f"You said {user_message}",
                             "problem_statement" : "Network Connectivity issues",
                             "root_cause_categorization":["Error","warning","Ignored"],
+                            "message":[{"engTitle":"loss of frame","engresolutionSummary":'reset the device'},
+                            {"engTitle":"loss of data","engresolutionSummary":'reset the device lost'}],
                             "resolution_summary" :"issue resolved with the reset of the device"}
 
             return JsonResponse(response_data)
